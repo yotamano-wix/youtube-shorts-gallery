@@ -50,6 +50,7 @@
   <script>
     // Store YouTube player instances for each video
     const players = [];
+    let activePlayer = null; // Track the currently active (hovered) player
 
     // Function to get URL parameters
     function getVideoParams() {
@@ -97,6 +98,7 @@
           events: {
             'onReady': function (event) {
               event.target.mute(); // Start muted
+              event.target.playVideo(); // Ensure video is playing on load
             }
           }
         });
@@ -104,10 +106,27 @@
         // Store player instance
         players.push(player);
 
-        // Unmute on hover
-        videoContainer.addEventListener("mouseover", () => player.unMute());
-        videoContainer.addEventListener("mouseleave", () => player.mute());
+        // Unmute on hover and mute on leave
+        videoContainer.addEventListener("mouseover", () => handleMouseOver(player));
+        videoContainer.addEventListener("mouseleave", handleMouseLeave);
       });
+    }
+
+    // Function to handle mouseover (unmute only the hovered video)
+    function handleMouseOver(player) {
+      if (activePlayer && activePlayer !== player) {
+        activePlayer.mute(); // Mute the previously active player
+      }
+      player.unMute();
+      player.playVideo(); // Ensure it keeps playing on hover
+      activePlayer = player; // Set this player as the currently active one
+    }
+
+    // Function to handle mouseleave (mute the active video)
+    function handleMouseLeave() {
+      if (activePlayer) {
+        activePlayer.mute();
+      }
     }
   </script>
 </body>

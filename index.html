@@ -44,7 +44,13 @@
     <div class="carousel-wrapper" id="videoGallery"></div>
   </div>
 
+  <!-- Load YouTube Iframe API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
   <script>
+    // Store YouTube player instances for each video
+    const players = [];
+
     // Function to get URL parameters
     function getVideoParams() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -57,7 +63,12 @@
       return videos;
     }
 
-    // Load videos from URL parameters
+    // Initialize players once YouTube Iframe API is ready
+    function onYouTubeIframeAPIReady() {
+      loadVideosFromParams();
+    }
+
+    // Load videos from URL parameters and create player instances
     function loadVideosFromParams() {
       const videos = getVideoParams();
       const gallery = document.getElementById('videoGallery');
@@ -65,42 +76,39 @@
       // Clear any existing content in the gallery
       gallery.innerHTML = '';
 
-      // Append video iframes with hover mute/unmute functionality
-      videos.forEach(videoId => {
+      videos.forEach((videoId, index) => {
         const videoContainer = document.createElement('div');
         videoContainer.classList.add('video-container');
-
-        // Create the iframe
+        
+        // Create the iframe and set basic attributes
         const iframe = document.createElement('iframe');
-        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&modestbranding=1`;
+        iframe.setAttribute('id', `player-${index}`);
+        iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&modestbranding=1`;
         iframe.allow = "autoplay";
         iframe.width = '100%';
         iframe.height = '100%';
         iframe.style.border = 'none';
-
-        // Unmute on hover
-        iframe.addEventListener("mouseover", () => toggleMute(iframe, false));
-        iframe.addEventListener("mouseleave", () => toggleMute(iframe, true));
-
+        
         videoContainer.appendChild(iframe);
         gallery.appendChild(videoContainer);
+
+        // Initialize the YouTube player for each iframe
+        const player = new YT.Player(iframe, {
+          events: {
+            'onReady': function (event) {
+              event.target.mute(); // Start muted
+            }
+          }
+        });
+
+        // Store player instance
+        players.push(player);
+
+        // Unmute on hover
+        videoContainer.addEventListener("mouseover", () => player.unMute());
+        videoContainer.addEventListener("mouseleave", () => player.mute());
       });
     }
-
-    // Toggle mute/unmute for iframe
-    function toggleMute(iframe, mute) {
-      const currentSrc = iframe.src;
-      const newSrc = mute
-        ? currentSrc.replace("mute=0", "mute=1")
-        : currentSrc.replace("mute=1", "mute=0");
-
-      if (currentSrc !== newSrc) {
-        iframe.src = newSrc;
-      }
-    }
-
-    // Load videos on page load
-    loadVideosFromParams();
   </script>
 </body>
 </html>

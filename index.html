@@ -17,7 +17,7 @@
     /* Wrapper for videos */
     .carousel-wrapper {
       display: flex;
-      transition: transform 0.2s linear; /* Smooth transition for minor adjustments */
+      transition: transform 0.2s linear;
     }
 
     /* Each video container */
@@ -26,6 +26,7 @@
       width: calc((9 / 16) * 800px); /* Dynamic width based on 9:16 aspect ratio */
       height: 800px;
       margin-right: 4px; /* 4px margin between videos */
+      flex-shrink: 0;
     }
   </style>
 </head>
@@ -42,8 +43,8 @@
     const players = [];
     let activePlayer = null; // Track the currently active (hovered) player
 
-    // Variables for scrolling
-    let scrollSpeed = 0.5; // Adjust this for smoother scrolling
+    // Variables for smooth scrolling
+    let scrollSpeed = 1; // Pixels per tick
     let scrollInterval;
 
     // Function to get URL parameters
@@ -104,9 +105,6 @@
         videoContainer.addEventListener("mouseleave", handleMouseLeave);
       });
 
-      // Duplicate videos for seamless scrolling
-      gallery.innerHTML += gallery.innerHTML;
-
       // Start the smooth scrolling loop
       startScrolling(gallery);
     }
@@ -129,18 +127,20 @@
 
     // Start the smooth scrolling loop
     function startScrolling(gallery) {
-      const scrollWidth = gallery.scrollWidth / 2; // Half, because we duplicated content
-      let currentScroll = 0;
-
+      const videoWidth = gallery.firstChild.offsetWidth + 4; // Width of one video + margin
       scrollInterval = setInterval(() => {
-        currentScroll += scrollSpeed;
+        gallery.style.transform = `translateX(-${scrollSpeed}px)`;
 
-        // Reset to start if we reach the duplicate's end
-        if (currentScroll >= scrollWidth) {
-          currentScroll = 0;
+        // Check if the first video is completely out of view
+        const firstVideo = gallery.firstChild;
+        const galleryRect = gallery.getBoundingClientRect();
+        const firstVideoRect = firstVideo.getBoundingClientRect();
+
+        if (firstVideoRect.right <= galleryRect.left) {
+          // Move the first video to the end of the container
+          gallery.appendChild(firstVideo);
+          gallery.style.transform = 'translateX(0)'; // Reset scroll position smoothly
         }
-
-        gallery.style.transform = `translateX(-${currentScroll}px)`;
       }, 20); // Adjust the interval for smoother effect
     }
 

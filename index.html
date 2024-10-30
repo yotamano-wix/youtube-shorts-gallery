@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube Shorts Carousel</title>
+  <title>Infinite Scrolling Carousel</title>
   <style>
     /* Full Width and 800px Fixed Height */
     .carousel-container {
@@ -17,7 +17,7 @@
     /* Wrapper for videos */
     .carousel-wrapper {
       display: flex;
-      transition: transform 0.2s linear;
+      /* No transition here as we reset position instantaneously */
     }
 
     /* Each video container */
@@ -39,16 +39,12 @@
   <script src="https://www.youtube.com/iframe_api"></script>
 
   <script>
-    // Store YouTube player instances for each video
     const players = [];
     let activePlayer = null; // Track the currently active (hovered) player
-
-    // Variables for smooth scrolling
     let scrollSpeed = 1; // Pixels per tick
     let currentScroll = 0; // Track current scroll position
     let scrollInterval;
 
-    // Function to get URL parameters
     function getVideoParams() {
       const urlParams = new URLSearchParams(window.location.search);
       const videos = [];
@@ -60,100 +56,86 @@
       return videos;
     }
 
-    // Initialize players once YouTube Iframe API is ready
     function onYouTubeIframeAPIReady() {
       loadVideosFromParams();
     }
 
-    // Load videos from URL parameters and create player instances
     function loadVideosFromParams() {
       const videos = getVideoParams();
       const gallery = document.getElementById('videoGallery');
 
-      // Clear any existing content in the gallery
-      gallery.innerHTML = '';
+      gallery.innerHTML = ''; // Clear any existing content
 
+      // Append original set of videos
       videos.forEach((videoId, index) => {
-        const videoContainer = document.createElement('div');
-        videoContainer.classList.add('video-container');
-        
-        // Create the iframe and set basic attributes
-        const iframe = document.createElement('iframe');
-        iframe.setAttribute('id', `player-${index}`);
-        iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&modestbranding=1`;
-        iframe.allow = "autoplay";
-        iframe.width = '100%';
-        iframe.height = '100%';
-        iframe.style.border = 'none';
-        
-        videoContainer.appendChild(iframe);
-        gallery.appendChild(videoContainer);
+        addVideoToGallery(gallery, videoId, index);
+      });
 
-        // Initialize the YouTube player for each iframe
-        const player = new YT.Player(iframe, {
-          events: {
-            'onReady': function (event) {
-              event.target.mute(); // Start muted
-            }
-          }
-        });
-
-        // Store player instance
-        players.push(player);
-
-        // Unmute on hover and mute on leave
-        videoContainer.addEventListener("mouseover", () => handleMouseOver(player));
-        videoContainer.addEventListener("mouseleave", handleMouseLeave);
+      // Append duplicate set of videos for seamless looping
+      videos.forEach((videoId, index) => {
+        addVideoToGallery(gallery, videoId, index + videos.length);
       });
 
       // Start the smooth scrolling loop
-      startScrolling(gallery);
+      startScrolling(gallery, videos.length);
     }
 
-    // Function to handle mouseover (unmute only the hovered video)
+    // Helper function to add video iframe
+    function addVideoToGallery(gallery, videoId, index) {
+      const videoContainer = document.createElement('div');
+      videoContainer.classList.add('video-container');
+      
+      const iframe = document.createElement('iframe');
+      iframe.setAttribute('id', `player-${index}`);
+      iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&modestbranding=1`;
+      iframe.allow = "autoplay";
+      iframe.width = '100%';
+      iframe.height = '100%';
+      iframe.style.border = 'none';
+
+      videoContainer.appendChild(iframe);
+      gallery.appendChild(videoContainer);
+
+      const player = new YT.Player(iframe, {
+        events: {
+          'onReady': function (event) {
+            event.target.mute(); // Start muted
+          }
+        }
+      });
+
+      players.push(player);
+
+      videoContainer.addEventListener("mouseover", () => handleMouseOver(player));
+      videoContainer.addEventListener("mouseleave", handleMouseLeave);
+    }
+
     function handleMouseOver(player) {
-      try {
-        if (activePlayer && activePlayer !== player) {
-          activePlayer.mute(); // Mute the previously active player
-        }
-        player.unMute();
-        activePlayer = player; // Set this player as the currently active one
-      } catch (error) {
-        console.error("Failed to unMute player:", player, error);
+      if (activePlayer && activePlayer !== player) {
+        activePlayer.mute(); // Mute the previously active player
       }
+      player.unMute();
+      activePlayer = player; // Set this player as the currently active one
     }
 
-    // Function to handle mouseleave (mute the active video)
     function handleMouseLeave() {
-      try {
-        if (activePlayer) {
-          activePlayer.mute();
-        }
-      } catch (error) {
-        console.error("Failed to mute player:", activePlayer, error);
+      if (activePlayer) {
+        activePlayer.mute();
       }
     }
 
-    // Start the smooth scrolling loop
-    function startScrolling(gallery) {
+    function startScrolling(gallery, videoCount) {
       const videoWidth = gallery.firstChild.offsetWidth + 4; // Width of one video + margin
+      const totalScrollWidth = videoWidth * videoCount; // Width of the original set
 
       scrollInterval = setInterval(() => {
         currentScroll += scrollSpeed;
-
-        // Apply translation to scroll the videos
         gallery.style.transform = `translateX(-${currentScroll}px)`;
 
-        // Check if the first video is completely out of view
-        const firstVideo = gallery.firstChild;
-        const galleryRect = gallery.getBoundingClientRect();
-        const firstVideoRect = firstVideo.getBoundingClientRect();
-
-        if (firstVideoRect.right <= galleryRect.left) {
-          // Move the first video to the end of the container
-          gallery.appendChild(firstVideo);
-          currentScroll -= videoWidth; // Adjust scroll to avoid a jump
-          gallery.style.transform = `translateX(-${currentScroll}px)`;
+        // Reset scroll position for seamless looping
+        if (currentScroll >= totalScrollWidth) {
+          currentScroll = 0;
+          gallery.style.transform = `translateX(0)`;
         }
       }, 20); // Adjust the interval for smoother effect
     }
@@ -162,7 +144,7 @@
     window.addEventListener('blur', () => clearInterval(scrollInterval));
     window.addEventListener('focus', () => {
       const gallery = document.getElementById('videoGallery');
-      startScrolling(gallery);
+      startScrolling(gallery, getVideoParams().length);
     });
   </script>
 </body>

@@ -59,43 +59,49 @@
   </div>
 
   <script>
-    // Fetch videos from Wix backend and display them
-    async function loadVideos() {
-      try {
-        const response = await fetch('https://your-wix-site.com/_functions/youtubeCacheModule/getCachedYouTubeVideos');
-        const videos = await response.json();
-
-        const gallery = document.getElementById('videoGallery');
-
-        // Clear any existing content in the gallery
-        gallery.innerHTML = '';
-
-        // Append video iframes with custom mute/unmute functionality
-        videos.forEach((video, index) => {
-          const videoContainer = document.createElement('div');
-          videoContainer.classList.add('video-container');
-
-          // Create the iframe
-          const iframe = document.createElement('iframe');
-          iframe.src = `https://www.youtube.com/embed/${video.videoId}?autoplay=1&mute=1&loop=1&playlist=${video.videoId}&controls=0&showinfo=0&modestbranding=1`;
-          iframe.allow = "autoplay";
-          iframe.width = '100%';
-          iframe.height = '800px';
-          iframe.style.border = 'none';
-          videoContainer.appendChild(iframe);
-
-          // Mute/Unmute button
-          const muteButton = document.createElement('button');
-          muteButton.classList.add('mute-button');
-          muteButton.textContent = '🔇';
-          muteButton.onclick = () => toggleMute(iframe, muteButton);
-          videoContainer.appendChild(muteButton);
-
-          gallery.appendChild(videoContainer);
-        });
-      } catch (error) {
-        console.error("Error loading videos:", error);
+    // Function to get URL parameters
+    function getVideoParams() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const videos = [];
+      for (const [key, value] of urlParams.entries()) {
+        if (key.startsWith('video')) {
+          videos.push(value);
+        }
       }
+      return videos;
+    }
+
+    // Load videos from URL parameters
+    function loadVideosFromParams() {
+      const videos = getVideoParams();
+      const gallery = document.getElementById('videoGallery');
+
+      // Clear any existing content in the gallery
+      gallery.innerHTML = '';
+
+      // Append video iframes with custom mute/unmute functionality
+      videos.forEach((videoId, index) => {
+        const videoContainer = document.createElement('div');
+        videoContainer.classList.add('video-container');
+
+        // Create the iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&modestbranding=1`;
+        iframe.allow = "autoplay";
+        iframe.width = '100%';
+        iframe.height = '800px';
+        iframe.style.border = 'none';
+        videoContainer.appendChild(iframe);
+
+        // Mute/Unmute button
+        const muteButton = document.createElement('button');
+        muteButton.classList.add('mute-button');
+        muteButton.textContent = '🔇';
+        muteButton.onclick = () => toggleMute(iframe, muteButton);
+        videoContainer.appendChild(muteButton);
+
+        gallery.appendChild(videoContainer);
+      });
     }
 
     // Toggle mute/unmute for each iframe
@@ -109,7 +115,7 @@
     }
 
     // Load videos on page load
-    loadVideos();
+    loadVideosFromParams();
   </script>
 </body>
 </html>

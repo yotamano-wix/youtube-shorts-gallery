@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Infinite Scrolling Carousel</title>
   <style>
-    /* Full Width and 800px Fixed Height */
+    /* Full Width and Fixed Height */
     .carousel-container {
       display: flex;
       overflow: hidden;
@@ -17,21 +17,30 @@
     /* Wrapper for videos */
     .carousel-wrapper {
       display: flex;
-      /* No transition here as we reset position instantaneously */
     }
 
     /* Each video container */
     .video-container {
       position: relative;
       width: calc((9 / 16) * 800px); /* Dynamic width based on 9:16 aspect ratio */
-      height: 800px;
+      height: 100%; /* Full height of 800px container */
       margin-right: 4px; /* 4px margin between videos */
       flex-shrink: 0;
+      box-sizing: border-box;
+      padding: 0; /* Ensure no padding inside the iframe */
+    }
+
+    /* Iframe Styling */
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      overflow: hidden; /* Prevents inner scroll */
     }
   </style>
 </head>
 <body>
-  <div class="carousel-container">
+  <div class="carousel-container" id="carouselContainer">
     <div class="carousel-wrapper" id="videoGallery"></div>
   </div>
 
@@ -91,7 +100,6 @@
       iframe.allow = "autoplay";
       iframe.width = '100%';
       iframe.height = '100%';
-      iframe.style.border = 'none';
 
       videoContainer.appendChild(iframe);
       gallery.appendChild(videoContainer);
@@ -139,6 +147,14 @@
         }
       }, 20); // Adjust the interval for smoother effect
     }
+
+    // Pause scrolling when hovering over the carousel container
+    const carouselContainer = document.getElementById('carouselContainer');
+    carouselContainer.addEventListener("mouseover", () => clearInterval(scrollInterval));
+    carouselContainer.addEventListener("mouseleave", () => {
+      const gallery = document.getElementById('videoGallery');
+      startScrolling(gallery, getVideoParams().length);
+    });
 
     // Stop scrolling when the page is not in focus
     window.addEventListener('blur', () => clearInterval(scrollInterval));

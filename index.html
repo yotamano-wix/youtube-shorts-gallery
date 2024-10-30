@@ -93,11 +93,14 @@
           events: {
             'onReady': function (event) {
               event.target.mute(); // Start muted
+            },
+            'onError': function (event) {
+              console.error('YouTube Player Error:', event);
             }
           }
         });
 
-        // Store player instance
+        // Store player instance and handle unMute functionality
         players.push(player);
 
         // Unmute on hover and mute on leave
@@ -111,17 +114,25 @@
 
     // Function to handle mouseover (unmute only the hovered video)
     function handleMouseOver(player) {
-      if (activePlayer && activePlayer !== player) {
-        activePlayer.mute(); // Mute the previously active player
+      try {
+        if (activePlayer && activePlayer !== player) {
+          activePlayer.mute(); // Mute the previously active player
+        }
+        player.unMute();
+        activePlayer = player; // Set this player as the currently active one
+      } catch (error) {
+        console.error("Failed to unMute player:", player, error);
       }
-      player.unMute();
-      activePlayer = player; // Set this player as the currently active one
     }
 
     // Function to handle mouseleave (mute the active video)
     function handleMouseLeave() {
-      if (activePlayer) {
-        activePlayer.mute();
+      try {
+        if (activePlayer) {
+          activePlayer.mute();
+        }
+      } catch (error) {
+        console.error("Failed to mute player:", activePlayer, error);
       }
     }
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Infinite Scrolling Carousel</title>
+  <title>Scrollable Carousel</title>
   <style>
     /* Remove default body margin */
     body {
@@ -13,16 +13,17 @@
     /* Full Width and Fixed Height */
     .carousel-container {
       display: flex;
-      overflow: hidden;
+      overflow-x: auto; /* Enable horizontal scrolling */
+      overflow-y: hidden; /* Hide vertical overflow */
       width: 100%;
       height: 800px;
       position: relative;
+      scroll-behavior: smooth; /* Smooth scrolling */
     }
 
     /* Wrapper for videos */
     .carousel-wrapper {
       display: flex;
-      animation: scroll 20s linear infinite; /* Initial animation */
     }
 
     /* Each video container */
@@ -43,21 +44,6 @@
       border: none;
       padding: 0; /* Ensure no padding within the iframe */
       overflow: hidden; /* Prevents inner scroll */
-    }
-
-    /* Keyframes for infinite scroll */
-    @keyframes scroll {
-      from {
-        transform: translateX(0);
-      }
-      to {
-        transform: translateX(-50%);
-      }
-    }
-
-    /* Pause animation on hover */
-    .carousel-container:hover .carousel-wrapper {
-      animation-play-state: paused;
     }
   </style>
 </head>
@@ -80,16 +66,16 @@
     function getVideoParams() {
       const urlParams = new URLSearchParams(window.location.search);
       const videos = [];
-    
-      // Check each video parameter in the URL and exclude "undefined" values
+
+      // Check each video parameter in the URL
       for (let i = 0; urlParams.has(`video${i}`); i++) {
         const videoId = urlParams.get(`video${i}`);
         if (videoId && videoId !== "undefined") {
           videos.push(videoId);
         }
       }
-    
-      // If no valid video parameters are found, use the fallback array
+
+      // If no video parameters are found, use the fallback array
       return videos.length > 0 ? videos : fallbackVideos;
     }
 
@@ -112,7 +98,7 @@
       // Ensure videos are loaded in gallery
       const loaded = await loadVideosIntoGallery(videos);
       if (loaded) {
-        setCarouselAnimationSpeed();
+        console.log("Videos loaded successfully.");
       } else {
         console.error("Videos failed to load.");
       }
@@ -183,14 +169,6 @@
       if (activePlayer) {
         activePlayer.mute();
       }
-    }
-
-    // Dynamically set the animation speed based on gallery width
-    function setCarouselAnimationSpeed() {
-      const gallery = document.getElementById('videoGallery');
-      const galleryWidth = gallery.offsetWidth;
-      const speed = galleryWidth / 50; // Adjust speed based on width
-      gallery.style.animationDuration = `${speed}s`; // Set animation speed
     }
 
     // Initialize the carousel on page load

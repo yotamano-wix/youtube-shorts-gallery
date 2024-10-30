@@ -60,6 +60,17 @@
     let currentScroll = 0; // Track current scroll position
     let scrollInterval;
 
+    // Ensure API and video elements are loaded before scrolling
+    function loadYouTubeIframeAPI() {
+      return new Promise(resolve => {
+        if (window.YT && window.YT.Player) {
+          resolve();
+        } else {
+          window.onYouTubeIframeAPIReady = resolve;
+        }
+      });
+    }
+
     function getVideoParams() {
       const urlParams = new URLSearchParams(window.location.search);
       const videos = [];
@@ -71,7 +82,8 @@
       return videos;
     }
 
-    function onYouTubeIframeAPIReady() {
+    async function initializeCarousel() {
+      await loadYouTubeIframeAPI();
       loadVideosFromParams();
     }
 
@@ -82,46 +94,50 @@
       gallery.innerHTML = ''; // Clear any existing content
 
       // Append original set of videos
-      videos.forEach((videoId, index) => {
-        addVideoToGallery(gallery, videoId, index);
-      });
+      const loadPromises = videos.map((videoId, index) => addVideoToGallery(gallery, videoId, index));
 
       // Append duplicate set of videos for seamless looping
-      videos.forEach((videoId, index) => {
-        addVideoToGallery(gallery, videoId, index + videos.length);
-      });
+      loadPromises.push(...videos.map((videoId, index) => addVideoToGallery(gallery, videoId, index + videos.length)));
 
-      // Start the smooth scrolling loop once videos are loaded
-      setTimeout(() => startScrolling(gallery, videos.length), 100); // Delay to ensure all videos are appended
+      // Wait for all iframes to load before starting scroll
+      Promise.all(loadPromises).then(() => {
+        startScrolling(gallery, videos.length);
+      });
     }
 
-    // Helper function to add video iframe
+    // Helper function to add video iframe and return a promise that resolves on iframe load
     function addVideoToGallery(gallery, videoId, index) {
-      const videoContainer = document.createElement('div');
-      videoContainer.classList.add('video-container');
-      
-      const iframe = document.createElement('iframe');
-      iframe.setAttribute('id', `player-${index}`);
-      iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&modestbranding=1`;
-      iframe.allow = "autoplay";
-      iframe.width = '100%';
-      iframe.height = '100%';
+      return new Promise(resolve => {
+        const videoContainer = document.createElement('div');
+        videoContainer.classList.add('video-container');
+        
+        const iframe = document.createElement('iframe');
+        iframe.setAttribute('id', `player-${index}`);
+        iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&modestbranding=1&origin=${window.location.origin}`;
+        iframe.allow = "autoplay";
+        iframe.width = '100%';
+        iframe.height = '100%';
 
-      videoContainer.appendChild(iframe);
-      gallery.appendChild(videoContainer);
+        // Resolve promise once iframe has loaded
+        iframe.onload = () => {
+          const player = new YT.Player(iframe, {
+            events: {
+              'onReady': function (event) {
+                event.target.mute(); // Start muted
+              }
+            }
+          });
 
-      const player = new YT.Player(iframe, {
-        events: {
-          'onReady': function (event) {
-            event.target.mute(); // Start muted
-          }
-        }
+          players.push(player);
+          videoContainer.addEventListener("mouseover", () => handleMouseOver(player));
+          videoContainer.addEventListener("mouseleave", handleMouseLeave);
+
+          resolve(); // Resolve once player is initialized
+        };
+
+        videoContainer.appendChild(iframe);
+        gallery.appendChild(videoContainer);
       });
-
-      players.push(player);
-
-      videoContainer.addEventListener("mouseover", () => handleMouseOver(player));
-      videoContainer.addEventListener("mouseleave", handleMouseLeave);
     }
 
     function handleMouseOver(player) {
@@ -173,6 +189,9 @@
       const gallery = document.getElementById('videoGallery');
       startScrolling(gallery, getVideoParams().length);
     });
+
+    // Initialize the carousel on page load
+    initializeCarousel();
   </script>
 </body>
 </html>

@@ -76,6 +76,21 @@
     // Fallback video IDs to use if no parameters are present
     const fallbackVideos = ["3pD6Q8Xfl9E", "Y-blA4mAvoM", "3pauPo1DS4U", "6C8QHmx8xDA", "kURjkzmRQJQ"];
 
+    // Function to check URL parameters or use fallback videos
+    function getVideoParams() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const videos = [];
+
+      // Check each video parameter in the URL
+      for (let i = 0; urlParams.has(`video${i}`); i++) {
+        const videoId = urlParams.get(`video${i}`);
+        if (videoId) videos.push(videoId);
+      }
+
+      // If no video parameters are found, use the fallback array
+      return videos.length > 0 ? videos : fallbackVideos;
+    }
+
     // Function to wait for the YouTube Iframe API to load
     function loadYouTubeIframeAPI() {
       return new Promise(resolve => {
@@ -85,19 +100,6 @@
           window.onYouTubeIframeAPIReady = resolve;
         }
       });
-    }
-
-    // Function to fetch video IDs from the URL parameters, or use fallback if no params are found
-    function getVideoParams() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const videos = [];
-      for (const [key, value] of urlParams.entries()) {
-        if (key.startsWith('video')) {
-          videos.push(value);
-        }
-      }
-      // Use fallback videos if no URL parameters were found
-      return videos.length > 0 ? videos : fallbackVideos;
     }
 
     // Initialize the carousel after ensuring API and videos are fully loaded

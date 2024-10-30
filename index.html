@@ -69,10 +69,15 @@
     }
 
     /* Show buttons and adjust carousel height only on mobile */
-    @media (max-width: 768px) {
-      .carousel-container {
-        height: 400px; /* Reduced height for mobile */
-      }
+      @media (max-width: 768px) {
+  .carousel-container {
+    height: 400px; /* Set height to 400px on mobile */
+  }
+  .video-container {
+    width: calc((9 / 16) * 400px); /* Adjust width for 9:16 ratio based on 400px height */
+    height: 100%; /* Full height of 400px container */
+  }
+
       .nav-button {
         display: block;
       }

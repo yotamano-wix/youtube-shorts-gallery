@@ -3,47 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scrollable Carousel</title>
+  <title>Scrollable and Animated Carousel</title>
   <style>
     /* Remove default body margin */
     body {
       margin: 0;
     }
 
-    /* Full Width and Fixed Height */
-    .carousel-container {
-      display: flex;
-      overflow-x: auto; /* Enable horizontal scrolling */
-      overflow-y: hidden; /* Hide vertical overflow */
-      width: 100%;
-      height: 800px;
-      position: relative;
-      scroll-behavior: smooth; /* Smooth scrolling */
-    }
 
-    /* Wrapper for videos */
+    /* Wrapper for videos with automatic scrolling animation */
     .carousel-wrapper {
       display: flex;
+      animation: scroll 20s linear infinite; /* Automatic scroll animation */
     }
 
-    /* Each video container */
-    .video-container {
-      position: relative;
-      width: calc((9 / 16) * 800px); /* Dynamic width based on 9:16 aspect ratio */
-      height: 100%; /* Full height of 800px container */
-      margin-right: 4px; /* 4px margin between videos */
-      box-sizing: border-box;
-      padding: 0;
-      flex-shrink: 0;
+
+.carousel-container {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
+  height: 100%; /* Fills the height of the iframe */
+  position: relative;
+  scroll-behavior: smooth;
+}
+
+.video-container {
+  position: relative;
+  width: calc((9 / 16) * 100%); /* Dynamic width based on 9:16 aspect ratio */
+  height: 100%; /* Full height of the container */
+  margin-right: 4px;
+  box-sizing: border-box;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+iframe {
+  width: 100%;
+  height: 100%; /* Fills the height of each video container */
+  border: none;
+  padding: 0;
+  overflow: hidden;
+}
+
+    /* Keyframes for infinite scroll animation */
+    @keyframes scroll {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(-50%); /* Adjust based on content width */
+      }
     }
 
-    /* Iframe Styling */
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      padding: 0; /* Ensure no padding within the iframe */
-      overflow: hidden; /* Prevents inner scroll */
+    /* Pause animation on hover for better UX */
+    .carousel-container:hover .carousel-wrapper {
+      animation-play-state: paused;
     }
   </style>
 </head>
@@ -98,7 +113,7 @@
       // Ensure videos are loaded in gallery
       const loaded = await loadVideosIntoGallery(videos);
       if (loaded) {
-        console.log("Videos loaded successfully.");
+        setCarouselAnimationSpeed();
       } else {
         console.error("Videos failed to load.");
       }
@@ -169,6 +184,14 @@
       if (activePlayer) {
         activePlayer.mute();
       }
+    }
+
+    // Dynamically set the animation speed based on gallery width
+    function setCarouselAnimationSpeed() {
+      const gallery = document.getElementById('videoGallery');
+      const galleryWidth = gallery.offsetWidth;
+      const speed = galleryWidth / 50; // Adjust speed based on width
+      gallery.style.animationDuration = `${speed}s`; // Set animation speed
     }
 
     // Initialize the carousel on page load

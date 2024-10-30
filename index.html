@@ -14,14 +14,10 @@
       position: relative;
     }
 
-    /* Wrapper for videos with smooth scrolling animation */
+    /* Wrapper for videos */
     .carousel-wrapper {
       display: flex;
-      animation: scroll 25s linear infinite;
-    }
-
-    .carousel-wrapper:hover {
-      animation-play-state: paused; /* Pause animation on hover */
+      transition: transform 0.2s linear; /* Smooth transition for minor adjustments */
     }
 
     /* Each video container */
@@ -30,12 +26,6 @@
       width: calc((9 / 16) * 800px); /* Dynamic width based on 9:16 aspect ratio */
       height: 800px;
       margin-right: 4px; /* 4px margin between videos */
-    }
-
-    /* Smooth scrolling animation */
-    @keyframes scroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
     }
   </style>
 </head>
@@ -51,6 +41,10 @@
     // Store YouTube player instances for each video
     const players = [];
     let activePlayer = null; // Track the currently active (hovered) player
+
+    // Variables for scrolling
+    let scrollSpeed = 0.5; // Adjust this for smoother scrolling
+    let scrollInterval;
 
     // Function to get URL parameters
     function getVideoParams() {
@@ -98,7 +92,6 @@
           events: {
             'onReady': function (event) {
               event.target.mute(); // Start muted
-              event.target.playVideo(); // Ensure video is playing on load
             }
           }
         });
@@ -110,6 +103,12 @@
         videoContainer.addEventListener("mouseover", () => handleMouseOver(player));
         videoContainer.addEventListener("mouseleave", handleMouseLeave);
       });
+
+      // Duplicate videos for seamless scrolling
+      gallery.innerHTML += gallery.innerHTML;
+
+      // Start the smooth scrolling loop
+      startScrolling(gallery);
     }
 
     // Function to handle mouseover (unmute only the hovered video)
@@ -127,6 +126,30 @@
         activePlayer.mute();
       }
     }
+
+    // Start the smooth scrolling loop
+    function startScrolling(gallery) {
+      const scrollWidth = gallery.scrollWidth / 2; // Half, because we duplicated content
+      let currentScroll = 0;
+
+      scrollInterval = setInterval(() => {
+        currentScroll += scrollSpeed;
+
+        // Reset to start if we reach the duplicate's end
+        if (currentScroll >= scrollWidth) {
+          currentScroll = 0;
+        }
+
+        gallery.style.transform = `translateX(-${currentScroll}px)`;
+      }, 20); // Adjust the interval for smoother effect
+    }
+
+    // Stop scrolling when the page is not in focus
+    window.addEventListener('blur', () => clearInterval(scrollInterval));
+    window.addEventListener('focus', () => {
+      const gallery = document.getElementById('videoGallery');
+      startScrolling(gallery);
+    });
   </script>
 </body>
 </html>

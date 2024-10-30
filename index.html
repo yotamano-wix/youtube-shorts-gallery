@@ -46,27 +46,29 @@
     }
 
     /* Navigation buttons for mobile */
-    .nav-button {
-      display: none; /* Hide by default, show only on mobile */
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background-color: rgba(0, 0, 0, 0.5);
-      border: none;
-      color: white;
-      font-size: 24px;
-      padding: 10px;
-      cursor: pointer;
-      z-index: 10;
-    }
+    /* Navigation buttons */
+.nav-button {
+  display: none; /* Show only on mobile using media query */
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none; /* Remove background */
+  border: none; /* Remove border */
+  color: yellow; /* Set arrow color to yellow */
+  font-size: 32px; /* Adjust size as needed */
+  font-weight: bold;
+  padding: 0;
+  cursor: pointer;
+  z-index: 10;
+}
 
-    .nav-button.left {
-      left: 10px;
-    }
+.nav-button.left {
+  left: 10px;
+}
 
-    .nav-button.right {
-      right: 10px;
-    }
+.nav-button.right {
+  right: 10px;
+}
 
     /* Show buttons and adjust carousel height only on mobile */
       @media (max-width: 768px) {

@@ -27,23 +27,9 @@
     /* Each video container */
     .video-container {
       position: relative;
-      width: 100%;
+      width: calc((9 / 16) * 800px); /* Dynamic width based on 9:16 aspect ratio */
       height: 800px;
-      margin: 0 5px;
-    }
-
-    /* Mute/Unmute button styling */
-    .mute-button {
-      position: absolute;
-      bottom: 15px;
-      right: 15px;
-      background: rgba(0, 0, 0, 0.5);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      padding: 8px 12px;
-      cursor: pointer;
-      font-size: 1.5rem;
+      margin-right: 4px; /* 4px margin between videos */
     }
 
     /* Smooth scrolling animation */
@@ -79,8 +65,8 @@
       // Clear any existing content in the gallery
       gallery.innerHTML = '';
 
-      // Append video iframes with custom mute/unmute functionality
-      videos.forEach((videoId, index) => {
+      // Append video iframes with hover mute/unmute functionality
+      videos.forEach(videoId => {
         const videoContainer = document.createElement('div');
         videoContainer.classList.add('video-container');
 
@@ -89,29 +75,28 @@
         iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&modestbranding=1`;
         iframe.allow = "autoplay";
         iframe.width = '100%';
-        iframe.height = '800px';
+        iframe.height = '100%';
         iframe.style.border = 'none';
+
+        // Unmute on hover
+        iframe.addEventListener("mouseover", () => toggleMute(iframe, false));
+        iframe.addEventListener("mouseleave", () => toggleMute(iframe, true));
+
         videoContainer.appendChild(iframe);
-
-        // Mute/Unmute button
-        const muteButton = document.createElement('button');
-        muteButton.classList.add('mute-button');
-        muteButton.textContent = '🔇';
-        muteButton.onclick = () => toggleMute(iframe, muteButton);
-        videoContainer.appendChild(muteButton);
-
         gallery.appendChild(videoContainer);
       });
     }
 
-    // Toggle mute/unmute for each iframe
-    function toggleMute(iframe, button) {
-      const isMuted = iframe.src.includes("mute=1");
-      iframe.src = isMuted 
-        ? iframe.src.replace("mute=1", "mute=0")
-        : iframe.src.replace("mute=0", "mute=1");
-      
-      button.textContent = isMuted ? '🔊' : '🔇';
+    // Toggle mute/unmute for iframe
+    function toggleMute(iframe, mute) {
+      const currentSrc = iframe.src;
+      const newSrc = mute
+        ? currentSrc.replace("mute=0", "mute=1")
+        : currentSrc.replace("mute=1", "mute=0");
+
+      if (currentSrc !== newSrc) {
+        iframe.src = newSrc;
+      }
     }
 
     // Load videos on page load

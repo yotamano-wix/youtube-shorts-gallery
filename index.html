@@ -22,6 +22,7 @@
     /* Wrapper for videos */
     .carousel-wrapper {
       display: flex;
+      animation: scroll 20s linear infinite; /* Initial animation */
     }
 
     /* Each video container */
@@ -43,6 +44,21 @@
       padding: 0; /* Ensure no padding within the iframe */
       overflow: hidden; /* Prevents inner scroll */
     }
+
+    /* Keyframes for infinite scroll */
+    @keyframes scroll {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Pause animation on hover */
+    .carousel-container:hover .carousel-wrapper {
+      animation-play-state: paused;
+    }
   </style>
 </head>
 <body>
@@ -56,9 +72,6 @@
   <script>
     const players = [];
     let activePlayer = null; // Track the currently active (hovered) player
-    let scrollSpeed = 1; // Pixels per tick
-    let currentScroll = 0; // Track current scroll position
-    let scrollInterval;
 
     // Function to wait for the YouTube Iframe API to load
     function loadYouTubeIframeAPI() {
@@ -91,7 +104,7 @@
       // Ensure videos are loaded in gallery
       const loaded = await loadVideosIntoGallery(videos);
       if (loaded) {
-        startScrolling(document.getElementById('videoGallery'), videos.length);
+        setCarouselAnimationSpeed();
       } else {
         console.error("Videos failed to load.");
       }
@@ -164,45 +177,13 @@
       }
     }
 
-    // Start scrolling once all videos are loaded
-    function startScrolling(gallery, videoCount) {
-      const videoWidth = gallery.firstChild.offsetWidth + 4; // Width of one video + margin
-      const totalScrollWidth = videoWidth * videoCount; // Width of the original set
-
-      scrollInterval = setInterval(() => {
-        currentScroll += scrollSpeed;
-        gallery.style.transform = `translateX(-${currentScroll}px)`;
-
-        // Reset scroll position for seamless looping
-        if (currentScroll >= totalScrollWidth) {
-          currentScroll = 0;
-          gallery.style.transform = `translateX(0)`;
-        }
-      }, 20); // Adjust the interval for smoother effect
+    // Dynamically set the animation speed based on gallery width
+    function setCarouselAnimationSpeed() {
+      const gallery = document.getElementById('videoGallery');
+      const galleryWidth = gallery.offsetWidth;
+      const speed = galleryWidth / 50; // Adjust speed based on width
+      gallery.style.animationDuration = `${speed}s`; // Set animation speed
     }
-
-    // Pause scrolling when hovering over the carousel container
-    const carouselContainer = document.getElementById('carouselContainer');
-    carouselContainer.addEventListener("mouseover", () => clearInterval(scrollInterval));
-    carouselContainer.addEventListener("mouseleave", () => {
-      const gallery = document.getElementById('videoGallery');
-      startScrolling(gallery, getVideoParams().length);
-    });
-
-    // Stop scrolling and mute all videos when the page loses focus
-    window.addEventListener('blur', () => {
-      clearInterval(scrollInterval);
-      players.forEach(player => player.mute());
-    });
-
-    // Restart scrolling and unmute active video (if any) when the page regains focus
-    window.addEventListener('focus', () => {
-      const gallery = document.getElementById('videoGallery');
-      startScrolling(gallery, getVideoParams().length);
-      if (activePlayer) {
-        activePlayer.unMute();
-      }
-    });
 
     // Initialize the carousel on page load
     initializeCarousel();

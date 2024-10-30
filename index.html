@@ -80,14 +80,16 @@
     function getVideoParams() {
       const urlParams = new URLSearchParams(window.location.search);
       const videos = [];
-
-      // Check each video parameter in the URL
+    
+      // Check each video parameter in the URL and exclude "undefined" values
       for (let i = 0; urlParams.has(`video${i}`); i++) {
         const videoId = urlParams.get(`video${i}`);
-        if (videoId) videos.push(videoId);
+        if (videoId && videoId !== "undefined") {
+          videos.push(videoId);
+        }
       }
-
-      // If no video parameters are found, use the fallback array
+    
+      // If no valid video parameters are found, use the fallback array
       return videos.length > 0 ? videos : fallbackVideos;
     }
 

@@ -60,7 +60,7 @@
     let currentScroll = 0; // Track current scroll position
     let scrollInterval;
 
-    // Ensure API and video elements are loaded before scrolling
+    // Function to wait for the YouTube Iframe API to load
     function loadYouTubeIframeAPI() {
       return new Promise(resolve => {
         if (window.YT && window.YT.Player) {
@@ -71,6 +71,7 @@
       });
     }
 
+    // Function to fetch video IDs from the URL parameters
     function getVideoParams() {
       const urlParams = new URLSearchParams(window.location.search);
       const videos = [];
@@ -82,30 +83,36 @@
       return videos;
     }
 
+    // Initialize the carousel after ensuring API and videos are fully loaded
     async function initializeCarousel() {
       await loadYouTubeIframeAPI();
-      loadVideosFromParams();
+      const videos = getVideoParams();
+
+      // Ensure videos are loaded in gallery
+      const loaded = await loadVideosIntoGallery(videos);
+      if (loaded) {
+        startScrolling(document.getElementById('videoGallery'), videos.length);
+      } else {
+        console.error("Videos failed to load.");
+      }
     }
 
-    function loadVideosFromParams() {
-      const videos = getVideoParams();
+    // Load videos into gallery and wait for all iframes to be ready
+    async function loadVideosIntoGallery(videos) {
       const gallery = document.getElementById('videoGallery');
-
       gallery.innerHTML = ''; // Clear any existing content
 
-      // Append original set of videos
-      const loadPromises = videos.map((videoId, index) => addVideoToGallery(gallery, videoId, index));
+      const loadPromises = [
+        ...videos.map((videoId, index) => addVideoToGallery(gallery, videoId, index)),
+        ...videos.map((videoId, index) => addVideoToGallery(gallery, videoId, index + videos.length))
+      ];
 
-      // Append duplicate set of videos for seamless looping
-      loadPromises.push(...videos.map((videoId, index) => addVideoToGallery(gallery, videoId, index + videos.length)));
-
-      // Wait for all iframes to load before starting scroll
-      Promise.all(loadPromises).then(() => {
-        startScrolling(gallery, videos.length);
-      });
+      // Wait for all iframes to load successfully
+      const loadedFrames = await Promise.all(loadPromises);
+      return loadedFrames.every(Boolean);
     }
 
-    // Helper function to add video iframe and return a promise that resolves on iframe load
+    // Add each video to the gallery and return a promise that resolves when the iframe loads
     function addVideoToGallery(gallery, videoId, index) {
       return new Promise(resolve => {
         const videoContainer = document.createElement('div');
@@ -118,7 +125,7 @@
         iframe.width = '100%';
         iframe.height = '100%';
 
-        // Resolve promise once iframe has loaded
+        // Load player when iframe loads
         iframe.onload = () => {
           const player = new YT.Player(iframe, {
             events: {
@@ -132,8 +139,11 @@
           videoContainer.addEventListener("mouseover", () => handleMouseOver(player));
           videoContainer.addEventListener("mouseleave", handleMouseLeave);
 
-          resolve(); // Resolve once player is initialized
+          resolve(true); // Resolve as successful once player is initialized
         };
+
+        // Handle load failure
+        iframe.onerror = () => resolve(false);
 
         videoContainer.appendChild(iframe);
         gallery.appendChild(videoContainer);
@@ -154,12 +164,8 @@
       }
     }
 
+    // Start scrolling once all videos are loaded
     function startScrolling(gallery, videoCount) {
-      if (!gallery.firstChild) {
-        console.error("No videos loaded in the gallery.");
-        return;
-      }
-
       const videoWidth = gallery.firstChild.offsetWidth + 4; // Width of one video + margin
       const totalScrollWidth = videoWidth * videoCount; // Width of the original set
 

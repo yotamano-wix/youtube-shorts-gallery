@@ -25,9 +25,9 @@
       width: calc((9 / 16) * 800px); /* Dynamic width based on 9:16 aspect ratio */
       height: 100%; /* Full height of 800px container */
       margin-right: 4px; /* 4px margin between videos */
-      flex-shrink: 0;
       box-sizing: border-box;
-      padding: 0; /* Ensure no padding inside the iframe */
+      padding: 0;
+      flex-shrink: 0;
     }
 
     /* Iframe Styling */
@@ -35,6 +35,7 @@
       width: 100%;
       height: 100%;
       border: none;
+      padding: 0; /* Ensure no padding within the iframe */
       overflow: hidden; /* Prevents inner scroll */
     }
   </style>

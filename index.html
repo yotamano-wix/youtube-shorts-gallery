@@ -189,11 +189,19 @@
       startScrolling(gallery, getVideoParams().length);
     });
 
-    // Stop scrolling when the page is not in focus
-    window.addEventListener('blur', () => clearInterval(scrollInterval));
+    // Stop scrolling and mute all videos when the page loses focus
+    window.addEventListener('blur', () => {
+      clearInterval(scrollInterval);
+      players.forEach(player => player.mute());
+    });
+
+    // Restart scrolling and unmute active video (if any) when the page regains focus
     window.addEventListener('focus', () => {
       const gallery = document.getElementById('videoGallery');
       startScrolling(gallery, getVideoParams().length);
+      if (activePlayer) {
+        activePlayer.unMute();
+      }
     });
 
     // Initialize the carousel on page load

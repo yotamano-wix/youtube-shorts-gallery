@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carousel with Auto-Scroll on Desktop & Mobile Controls</title>
+  <title>Carousel with Fixed Navigation Buttons</title>
   <style>
     /* Remove default body margin */
     body {
@@ -20,10 +20,9 @@
       position: relative;
     }
 
-    /* Wrapper for videos with automatic scrolling animation on desktop */
+    /* Wrapper for videos */
     .carousel-wrapper {
       display: flex;
-      animation: scroll 20s linear infinite; /* Automatic scroll animation */
     }
 
     /* Each video container */
@@ -50,7 +49,7 @@
     /* Navigation buttons for mobile */
     .nav-button {
       display: none; /* Show only on mobile using media query */
-      position: absolute;
+      position: fixed; /* Keep buttons fixed in place relative to viewport */
       top: 50%;
       transform: translateY(-50%);
       background: none;
@@ -99,183 +98,45 @@
       .nav-button {
         display: block; /* Show buttons on mobile */
       }
-      .carousel-wrapper {
-        animation: none; /* Disable auto-scroll animation on mobile */
-      }
-    }
-
-    /* Keyframes for infinite scroll animation on desktop */
-    @keyframes scroll {
-      from {
-        transform: translateX(0);
-      }
-      to {
-        transform: translateX(-50%); /* Adjust based on content width */
-      }
-    }
-
-    /* Pause animation on hover */
-    .carousel-container:hover .carousel-wrapper {
-      animation-play-state: paused;
     }
   </style>
 </head>
 <body>
-  <div class="carousel-container" id="carouselContainer">
+  <div class="carousel-container">
     <!-- Navigation Buttons for Mobile -->
-    <button class="nav-button left" id="prevButton"></button>
-    <button class="nav-button right" id="nextButton"></button>
+    <button class="nav-button left" onclick="scrollByAmount(-1)"></button>
+    <button class="nav-button right" onclick="scrollByAmount(1)"></button>
 
-    <div class="carousel-wrapper" id="videoGallery"></div>
+    <div class="carousel-wrapper" id="videoGallery">
+      <!-- Video items will be inserted here -->
+      <div class="video-container">
+        <iframe src="https://www.youtube.com/embed/3pD6Q8Xfl9E?autoplay=1&mute=1&loop=1&playlist=3pD6Q8Xfl9E&controls=0&modestbranding=1"></iframe>
+      </div>
+      <div class="video-container">
+        <iframe src="https://www.youtube.com/embed/Y-blA4mAvoM?autoplay=1&mute=1&loop=1&playlist=Y-blA4mAvoM&controls=0&modestbranding=1"></iframe>
+      </div>
+      <div class="video-container">
+        <iframe src="https://www.youtube.com/embed/3pauPo1DS4U?autoplay=1&mute=1&loop=1&playlist=3pauPo1DS4U&controls=0&modestbranding=1"></iframe>
+      </div>
+      <div class="video-container">
+        <iframe src="https://www.youtube.com/embed/6C8QHmx8xDA?autoplay=1&mute=1&loop=1&playlist=6C8QHmx8xDA&controls=0&modestbranding=1"></iframe>
+      </div>
+      <div class="video-container">
+        <iframe src="https://www.youtube.com/embed/kURjkzmRQJQ?autoplay=1&mute=1&loop=1&playlist=kURjkzmRQJQ&controls=0&modestbranding=1"></iframe>
+      </div>
+    </div>
   </div>
 
-  <!-- Load YouTube Iframe API -->
-  <script src="https://www.youtube.com/iframe_api"></script>
-
   <script>
-    const players = [];
-    let activePlayer = null; // Track the currently active (hovered) player
-    let currentIndex = 0; // Track the current video index
-
-    // Fallback video IDs to use if no parameters are present
-    const fallbackVideos = ["3pD6Q8Xfl9E", "Y-blA4mAvoM", "3pauPo1DS4U", "6C8QHmx8xDA", "kURjkzmRQJQ"];
-
-    // Function to check URL parameters or use fallback videos
-    function getVideoParams() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const videos = [];
-
-      for (let i = 0; urlParams.has(`video${i}`); i++) {
-        const videoId = urlParams.get(`video${i}`);
-        if (videoId && videoId !== "undefined") {
-          videos.push(videoId);
-        }
-      }
-      return videos.length > 0 ? videos : fallbackVideos;
-    }
-
-    // Function to wait for the YouTube Iframe API to load
-    function loadYouTubeIframeAPI() {
-      return new Promise(resolve => {
-        if (window.YT && window.YT.Player) {
-          resolve();
-        } else {
-          window.onYouTubeIframeAPIReady = resolve;
-        }
+    // JavaScript to scroll the carousel by one video at a time
+    function scrollByAmount(amount) {
+      const container = document.querySelector('.carousel-container');
+      const videoWidth = container.querySelector('.video-container').offsetWidth + 4; // Width of a video + margin
+      container.scrollBy({
+        left: amount * videoWidth,
+        behavior: 'smooth'
       });
     }
-
-    // Initialize the carousel after ensuring API and videos are fully loaded
-    async function initializeCarousel() {
-      await loadYouTubeIframeAPI();
-      const videos = getVideoParams();
-
-      const loaded = await loadVideosIntoGallery(videos);
-      if (loaded) {
-        setCarouselAnimationSpeed();
-      } else {
-        console.error("Videos failed to load.");
-      }
-    }
-
-    // Load videos into gallery and wait for all iframes to be ready
-    async function loadVideosIntoGallery(videos) {
-      const gallery = document.getElementById('videoGallery');
-      gallery.innerHTML = ''; // Clear any existing content
-
-      const loadPromises = [
-        ...videos.map((videoId, index) => addVideoToGallery(gallery, videoId, index)),
-        ...videos.map((videoId, index) => addVideoToGallery(gallery, videoId, index + videos.length))
-      ];
-
-      const loadedFrames = await Promise.all(loadPromises);
-      return loadedFrames.every(Boolean);
-    }
-
-    // Add each video to the gallery and return a promise that resolves when the iframe loads
-    function addVideoToGallery(gallery, videoId, index) {
-      return new Promise(resolve => {
-        const videoContainer = document.createElement('div');
-        videoContainer.classList.add('video-container');
-        
-        const iframe = document.createElement('iframe');
-        iframe.setAttribute('id', `player-${index}`);
-        iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&modestbranding=1&origin=${window.location.origin}`;
-        iframe.allow = "autoplay";
-        iframe.width = '100%';
-        iframe.height = '100%';
-
-        // Load player when iframe loads
-        iframe.onload = () => {
-          const player = new YT.Player(iframe, {
-            events: {
-              'onReady': function (event) {
-                event.target.mute(); // Start muted
-              }
-            }
-          });
-
-          players.push(player);
-          videoContainer.addEventListener("mouseover", () => handleMouseOver(player));
-          videoContainer.addEventListener("mouseleave", handleMouseLeave);
-
-          resolve(true); // Resolve as successful once player is initialized
-        };
-
-        iframe.onerror = () => resolve(false);
-
-        videoContainer.appendChild(iframe);
-        gallery.appendChild(videoContainer);
-      });
-    }
-
-    function handleMouseOver(player) {
-      if (activePlayer && activePlayer !== player) {
-        activePlayer.mute(); // Mute the previously active player
-      }
-      player.unMute();
-      activePlayer = player;
-    }
-
-    function handleMouseLeave() {
-      if (activePlayer) {
-        activePlayer.mute();
-      }
-    }
-
-    // Scroll to the next or previous video
-    function scrollToVideo(index) {
-      const gallery = document.getElementById('videoGallery');
-      const videoWidth = gallery.firstChild.offsetWidth + 4; // Include margin
-      currentIndex = index;
-
-      // Loop back to start or end if out of bounds
-      if (currentIndex >= players.length / 2) {
-        currentIndex = 0;
-      } else if (currentIndex < 0) {
-        currentIndex = players.length / 2 - 1;
-      }
-
-      // Smoothly scroll to the targeted video
-      gallery.scrollTo({
-        left: videoWidth * currentIndex,
-        behavior: "smooth"
-      });
-    }
-
-    // Button click handlers
-    document.getElementById('nextButton').onclick = () => scrollToVideo(currentIndex + 1);
-    document.getElementById('prevButton').onclick = () => scrollToVideo(currentIndex - 1);
-
-    // Set animation speed
-    function setCarouselAnimationSpeed() {
-      const gallery = document.getElementById('videoGallery');
-      const galleryWidth = gallery.offsetWidth;
-      const speed = galleryWidth / 50;
-      gallery.style.animationDuration = `${speed}s`;
-    }
-
-    initializeCarousel();
   </script>
 </body>
 </html>

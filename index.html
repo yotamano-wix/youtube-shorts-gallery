@@ -108,27 +108,47 @@
     <button class="nav-button left" id="prevButton" onclick="scrollByAmount(-1)"></button>
     <button class="nav-button right" id="nextButton" onclick="scrollByAmount(1)"></button>
 
-    <div class="carousel-wrapper" id="videoGallery">
-      <!-- Video items will be inserted here -->
-      <div class="video-container">
-        <iframe src="https://www.youtube.com/embed/3pD6Q8Xfl9E?autoplay=1&mute=1&loop=1&playlist=3pD6Q8Xfl9E&controls=0&modestbranding=1"></iframe>
-      </div>
-      <div class="video-container">
-        <iframe src="https://www.youtube.com/embed/Y-blA4mAvoM?autoplay=1&mute=1&loop=1&playlist=Y-blA4mAvoM&controls=0&modestbranding=1"></iframe>
-      </div>
-      <div class="video-container">
-        <iframe src="https://www.youtube.com/embed/3pauPo1DS4U?autoplay=1&mute=1&loop=1&playlist=3pauPo1DS4U&controls=0&modestbranding=1"></iframe>
-      </div>
-      <div class="video-container">
-        <iframe src="https://www.youtube.com/embed/6C8QHmx8xDA?autoplay=1&mute=1&loop=1&playlist=6C8QHmx8xDA&controls=0&modestbranding=1"></iframe>
-      </div>
-      <div class="video-container">
-        <iframe src="https://www.youtube.com/embed/kURjkzmRQJQ?autoplay=1&mute=1&loop=1&playlist=kURjkzmRQJQ&controls=0&modestbranding=1"></iframe>
-      </div>
-    </div>
+    <div class="carousel-wrapper" id="videoGallery"></div>
   </div>
 
   <script>
+    const fallbackVideos = ["3pD6Q8Xfl9E", "Y-blA4mAvoM", "3pauPo1DS4U", "6C8QHmx8xDA", "kURjkzmRQJQ"];
+
+    // Function to get video IDs from URL parameters or use fallback
+    function getVideoIds() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const videoIds = [];
+
+      for (let i = 0; urlParams.has(`video${i}`); i++) {
+        const videoId = urlParams.get(`video${i}`);
+        if (videoId && videoId !== "undefined") {
+          videoIds.push(videoId);
+        }
+      }
+
+      return videoIds.length > 0 ? videoIds : fallbackVideos;
+    }
+
+    // Load videos into the carousel based on the retrieved IDs
+    function loadVideos(videoIds) {
+      const gallery = document.getElementById('videoGallery');
+      gallery.innerHTML = ''; // Clear any existing content
+
+      videoIds.forEach(videoId => {
+        const videoContainer = document.createElement('div');
+        videoContainer.classList.add('video-container');
+
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1`;
+        iframe.allow = "autoplay";
+        iframe.width = '100%';
+        iframe.height = '100%';
+
+        videoContainer.appendChild(iframe);
+        gallery.appendChild(videoContainer);
+      });
+    }
+
     // JavaScript to scroll the carousel by one video at a time
     const container = document.getElementById('carouselContainer');
     const prevButton = document.getElementById('prevButton');
@@ -161,7 +181,9 @@
       setTimeout(updateButtonVisibility, 300);
     }
 
-    // Initial button visibility check
+    // Load videos and update initial button visibility
+    const videoIds = getVideoIds();
+    loadVideos(videoIds);
     updateButtonVisibility();
 
     // Listen for scroll events to dynamically update button visibility

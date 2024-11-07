@@ -13,7 +13,8 @@
     /* Full Width and Fixed Height (changes based on device size) */
     .carousel-container {
       display: flex;
-      overflow: hidden;
+      overflow-x: auto; /* Enable horizontal scroll */
+      scroll-snap-type: x mandatory; /* Snap scrolling */
       width: 100%;
       height: 800px; /* Default height for desktop */
       position: relative;
@@ -27,6 +28,7 @@
 
     /* Each video container */
     .video-container {
+      scroll-snap-align: center; /* Center the current video */
       position: relative;
       width: calc((9 / 16) * 800px); /* Dynamic width based on 9:16 aspect ratio */
       height: 100%; /* Full height of 800px container */
@@ -46,61 +48,57 @@
     }
 
     /* Navigation buttons for mobile */
-    /* Navigation buttons */
-/* Navigation buttons */
-.nav-button {
-  display: none; /* Show only on mobile using media query */
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  z-index: 10;
-  width: 24px;
-  height: 24px;
-  color: transparent;
-}
+    .nav-button {
+      display: none; /* Show only on mobile using media query */
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      padding: 20px; /* Increase padding for a larger clickable area */
+      cursor: pointer;
+      z-index: 10;
+      width: 24px;
+      height: 24px;
+      color: transparent;
+    }
 
-.nav-button:before {
-  content: '';
-  display: block;
-  width: 100%;
-  height: 100%;
-  border: solid #fff44f;
-  border-width: 0 4px 4px 0;
-  
-}
+    .nav-button:before {
+      content: '';
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: solid #fff44f;
+      border-width: 0 4px 4px 0;
+    }
 
-.nav-button.right:before {
-  transform: rotate(315deg); /* Right arrow */
-}
+    .nav-button.right:before {
+      transform: rotate(315deg); /* Right arrow */
+    }
 
-.nav-button.left:before {
-  transform: rotate(135deg); /* Left arrow */
-}
+    .nav-button.left:before {
+      transform: rotate(135deg); /* Left arrow */
+    }
 
-.nav-button.left {
-  left: 24px;
-}
+    .nav-button.left {
+      left: 10px;
+    }
 
-.nav-button.right {
-  right: 24px;
-}
+    .nav-button.right {
+      right: 10px;
+    }
 
     /* Show buttons and adjust carousel height only on mobile */
-      @media (max-width: 768px) {
-  .carousel-container {
-    height: 400px; /* Set height to 400px on mobile */
-  }
-  .video-container {
-    width: calc((9 / 16) * 400px); /* Adjust width for 9:16 ratio based on 400px height */
-    height: 100%; /* Full height of 400px container */
-  }
-
+    @media (max-width: 768px) {
+      .carousel-container {
+        height: 400px; /* Set height to 400px on mobile */
+      }
+      .video-container {
+        width: calc((9 / 16) * 400px); /* Adjust width for 9:16 ratio based on 400px height */
+        height: 100%; /* Full height of 400px container */
+      }
       .nav-button {
-        display: block;
+        display: block; /* Show buttons on mobile */
       }
       .carousel-wrapper {
         animation: none; /* Disable auto-scroll animation on mobile */
@@ -126,8 +124,8 @@
 <body>
   <div class="carousel-container" id="carouselContainer">
     <!-- Navigation Buttons for Mobile -->
-    <button class="nav-button left" id="prevButton">&#9664;</button>
-    <button class="nav-button right" id="nextButton">&#9654;</button>
+    <button class="nav-button left" id="prevButton"></button>
+    <button class="nav-button right" id="nextButton"></button>
 
     <div class="carousel-wrapper" id="videoGallery"></div>
   </div>
@@ -259,7 +257,11 @@
         currentIndex = players.length / 2 - 1;
       }
 
-      gallery.style.transform = `translateX(-${videoWidth * currentIndex}px)`;
+      // Smoothly scroll to the targeted video
+      gallery.scrollTo({
+        left: videoWidth * currentIndex,
+        behavior: "smooth"
+      });
     }
 
     // Button click handlers
